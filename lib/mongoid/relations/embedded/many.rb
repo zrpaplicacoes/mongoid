@@ -372,7 +372,7 @@ module Mongoid
         # @param [ Document ] document The document to delete.
         #
         # @since 2.4.7
-        def delete_one(document)
+        def delete_one(document, options = {})
           target.delete_one(document)
           _unscoped.delete_one(document)
           reindex

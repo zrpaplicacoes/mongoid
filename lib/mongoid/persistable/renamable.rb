@@ -20,9 +20,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def rename(renames)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(renames) do |old_field, new_field|
+      def rename(renames, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(renames, options) do |old_field, new_field|
             new_name = new_field.to_s
             attributes[new_name] = attributes.delete(old_field)
             ops[atomic_attribute_name(old_field)] = atomic_attribute_name(new_name)

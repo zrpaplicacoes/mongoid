@@ -18,10 +18,10 @@ module Mongoid
       # @return [ true, false ] True if successful, false if not.
       #
       # @since 1.0.0
-      def destroy(options = nil)
+      def destroy(options = {})
         raise Errors::ReadonlyDocument.new(self.class) if readonly?
         self.flagged_for_destroy = true
-        result = run_callbacks(:destroy) { delete(options || {}) }
+        result = run_callbacks(:destroy) { delete(options) }
         self.flagged_for_destroy = false
         result
       end
@@ -47,11 +47,11 @@ module Mongoid
         # @return [ Integer ] The number of documents destroyed.
         #
         # @since 1.0.0
-        def destroy_all(conditions = nil)
+        def destroy_all(conditions = nil, options = {})
           selector = conditions || {}
           documents = where(selector)
           destroyed = documents.count
-          documents.each { |doc| doc.destroy }
+          documents.each { |doc| doc.destroy(options) }
           destroyed
         end
       end

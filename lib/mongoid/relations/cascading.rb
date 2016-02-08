@@ -24,7 +24,7 @@ module Mongoid
       #   document.cascade!
       #
       # @since 2.0.0.rc.1
-      def cascade!
+      def cascade!(options = {})
         cascades.each do |name|
           if meta = relations[name]
             strategy = meta.cascade_strategy

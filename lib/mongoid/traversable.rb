@@ -100,13 +100,13 @@ module Mongoid
     # @param [ Document ] child The child (embedded) document to remove.
     #
     # @since 2.0.0.beta.1
-    def remove_child(child)
+    def remove_child(child, options = {})
       name = child.metadata_name
       if child.embedded_one?
         remove_ivar(name)
       else
         relation = send(name)
-        relation.send(:delete_one, child)
+        relation.send(:delete_one, child, options)
       end
     end
 

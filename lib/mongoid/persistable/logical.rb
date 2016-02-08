@@ -19,9 +19,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def bit(operations)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(operations) do |field, values|
+      def bit(operations, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(operations, options) do |field, values|
             value = attributes[field]
             values.each do |op, val|
               value = value & val if op.to_s == "and"

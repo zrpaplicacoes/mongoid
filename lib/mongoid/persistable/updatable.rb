@@ -23,7 +23,7 @@ module Mongoid
       # @return [ true, false ] True if save was successfull, false if not.
       #
       # @since 2.0.0
-      def update_attribute(name, value)
+      def update_attribute(name, value, options = {})
         normalized = name.to_s
         unless attribute_writable?(normalized)
           raise Errors::ReadonlyAttribute.new(normalized, value)
@@ -32,7 +32,7 @@ module Mongoid
         if respond_to?(setter)
           send(setter, value)
         else
-          write_attribute(database_field_name(normalized), value)
+          write_attribute(database_field_name(normalized), value, options)
         end
         save(validate: false)
       end
@@ -47,9 +47,9 @@ module Mongoid
       # @return [ true, false ] True if validation passed, false if not.
       #
       # @since 1.0.0
-      def update(attributes = {})
+      def update(attributes = {}, options = {})
         assign_attributes(attributes)
-        save
+        save(options)
       end
       alias :update_attributes :update
 
@@ -67,8 +67,8 @@ module Mongoid
       # @return [ true, false ] True if validation passed.
       #
       # @since 1.0.0
-      def update!(attributes = {})
-        result = update_attributes(attributes)
+      def update!(attributes = {}, options = {})
+        result = update_attributes(attributes, options)
         unless result
           fail_due_to_validation! unless errors.empty?
           fail_due_to_callback!(:update_attributes!)
@@ -139,7 +139,8 @@ module Mongoid
         prepare_update(options) do
           updates, conflicts = init_atomic_updates
           unless updates.empty?
-            coll = _root.collection
+            context = options[:mongo_context] || Context.new(self)
+            coll = context.collection(_root)
             selector = atomic_selector
             coll.find(selector).update_one(positionally(selector, updates))
             conflicts.each_pair do |key, value|

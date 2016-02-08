@@ -22,9 +22,9 @@ module Mongoid
       def insert(options = {})
         prepare_insert(options) do
           if embedded?
-            insert_as_embedded
+            insert_as_embedded(options)
           else
-            insert_as_root
+            insert_as_root(options)
           end
         end
       end
@@ -55,13 +55,14 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def insert_as_embedded
+      def insert_as_embedded(options = {})
         raise Errors::NoParent.new(self.class.name) unless _parent
         if _parent.new_record?
-          _parent.insert
+          _parent.insert(options)
         else
           selector = _parent.atomic_selector
-          _root.collection.find(selector).update_one(positionally(selector, atomic_inserts))
+          context = options[:mongo_context] || Context.new(_root)
+          context.collection(_root).find(selector).update_one(positionally(selector, atomic_inserts))
         end
       end
 
@@ -75,8 +76,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def insert_as_root
-        collection.insert_one(as_document)
+      def insert_as_root(options = {})
+        context = options[:mongo_context] || Context.new(_root)
+        context.collection(_root).insert_one(as_document)
       end
 
       # Post process an insert, which sets the new record attribute to false
@@ -140,13 +142,13 @@ module Mongoid
         # @return [ Document, Array<Document> ] The newly created document(s).
         #
         # @since 1.0.0
-        def create(attributes = nil, &block)
+        def create(attributes = nil, options = {}, &block)
           _creating do
             if attributes.is_a?(::Array)
-              attributes.map { |attrs| create(attrs, &block) }
+              attributes.map { |attrs| create(attrs, options, &block) }
             else
               doc = new(attributes, &block)
-              doc.save
+              doc.save(options)
               doc
             end
           end
@@ -171,13 +173,13 @@ module Mongoid
         # @return [ Document, Array<Document> ] The newly created document(s).
         #
         # @since 1.0.0
-        def create!(attributes = nil, &block)
+        def create!(attributes = nil, options = {}, &block)
           _creating do
             if attributes.is_a?(::Array)
-              attributes.map { |attrs| create!(attrs, &block) }
+              attributes.map { |attrs| create!(attrs, options, &block) }
             else
               doc = new(attributes, &block)
-              doc.fail_due_to_validation! unless doc.insert.errors.empty?
+              doc.fail_due_to_validation! unless doc.insert(options).errors.empty?
               doc.fail_due_to_callback!(:create!) if doc.new_record?
               doc
             end

@@ -19,9 +19,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def add_to_set(adds)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(adds) do |field, value|
+      def add_to_set(adds, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(adds, options) do |field, value|
             existing = send(field) || (attributes[field] ||= [])
             values = [ value ].flatten(1)
             values.each do |val|
@@ -46,9 +46,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def push(pushes)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(pushes) do |field, value|
+      def push(pushes, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(pushes, options) do |field, value|
             existing = send(field) || (attributes[field] ||= [])
             values = [ value ].flatten(1)
             values.each{ |val| existing.push(val) }

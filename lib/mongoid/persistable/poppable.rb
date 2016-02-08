@@ -24,9 +24,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def pop(pops)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(pops) do |field, value|
+      def pop(pops, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(pops, options) do |field, value|
             values = send(field)
             value > 0 ? values.pop : values.shift
             ops[atomic_attribute_name(field)] = value

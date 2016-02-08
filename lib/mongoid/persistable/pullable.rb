@@ -20,9 +20,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def pull(pulls)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(pulls) do |field, value|
+      def pull(pulls, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(pulls, options) do |field, value|
             (send(field) || []).delete(value)
             ops[atomic_attribute_name(field)] = value
           end
@@ -40,9 +40,9 @@ module Mongoid
       # @return [ Document ] The document.
       #
       # @since 4.0.0
-      def pull_all(pulls)
-        prepare_atomic_operation do |ops|
-          process_atomic_operations(pulls) do |field, value|
+      def pull_all(pulls, options = {})
+        prepare_atomic_operation(options) do |ops|
+          process_atomic_operations(pulls, options) do |field, value|
             existing = send(field) || []
             value.each{ |val| existing.delete(val) }
             ops[atomic_attribute_name(field)] = value

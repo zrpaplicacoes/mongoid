@@ -21,7 +21,8 @@ module Mongoid
       #
       # @since 4.0.0
       def unset(*fields)
-        prepare_atomic_operation do |ops|
+        options = fields[-1].is_a?(Hash) ? fields.pop : {}
+        prepare_atomic_operation(options) do |ops|
           fields.flatten.each do |field|
             normalized = database_field_name(field)
             attributes.delete(normalized)
