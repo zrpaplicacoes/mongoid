@@ -1,16 +1,34 @@
 module Mongoid
   class Context
 
-    def initialize(object = nil)
-      @write_concern = Mongo::WriteConcern.get(w: 1)#object.write_concern
-      @read_preference = Mongo::ServerSelector.get(mode: :primary)#object.read_preference
-      @collection = object.collection
-      @database = @collection.database
+    extend Forwardable
+
+    attr_reader :options
+
+    def_delegators :@mongo_client,
+                   :cluster,
+                   :database
+
+    def initialize(object = nil, opts = {})
       @object = object
+      @options = opts
     end
 
     def collection(other_object = nil)
-      other_object ? other_object.collection : @collection
+      if other_object
+        mongo_client[other_object.collection_name || other_object.klass.collection_name]
+      else
+        mongo_client[@object.collection_name]
+      end
+    end
+
+    def mongo_client
+      @mongo_client ||=
+        if options[:client]
+          Clients.with_name(opts[:client])
+        else
+          options ? @object.mongo_client.with(options) : @object.mongo_client
+        end
     end
   end
 end

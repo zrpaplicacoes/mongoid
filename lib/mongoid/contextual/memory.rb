@@ -10,6 +10,12 @@ module Mongoid
       include Relations::Eager
       include Queryable
       include Positional
+      extend Forwardable
+
+      def_delegators :@klass,
+                     :mongo_client,
+                     :database_field_name,
+                     :database_name
 
       # @attribute [r] root The root document.
       # @attribute [r] path The atomic path.
@@ -145,11 +151,12 @@ module Mongoid
       # @param [ Criteria ] The criteria.
       #
       # @since 3.0.0
-      def initialize(criteria)
+      def initialize(criteria, options = {})
         @criteria, @klass = criteria, criteria.klass
+        context = options[:mongo_conext] || Context.new(self)
         @documents = criteria.documents.select do |doc|
           @root ||= doc._root
-          @collection ||= root.collection
+          @collection ||= context.collection(root)
           doc.matches?(criteria.selector)
         end
         apply_sorting

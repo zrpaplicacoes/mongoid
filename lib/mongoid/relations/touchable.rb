@@ -21,17 +21,18 @@ module Mongoid
       # @return [ true/false ] false if record is new_record otherwise true.
       #
       # @since 3.0.0
-      def touch(field = nil)
+      def touch(field = nil, options = {})
         return false if _root.new_record?
         current = Time.now
         field = database_field_name(field)
-        write_attribute(:updated_at, current) if respond_to?("updated_at=")
-        write_attribute(field, current) if field
+        write_attribute(:updated_at, current, options) if respond_to?("updated_at=")
+        write_attribute(field, current, options) if field
 
         touches = touch_atomic_updates(field)
         unless touches.empty?
           selector = atomic_selector
-          _root.collection.find(selector).update_one(positionally(selector, touches))
+          context = options[:mongo_context] || Context.new(self)
+          context.collection(_root).find(selector).update_one(positionally(selector, touches))
         end
         run_callbacks(:touch)
         true

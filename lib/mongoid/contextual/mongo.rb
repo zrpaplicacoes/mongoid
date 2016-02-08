@@ -14,6 +14,12 @@ module Mongoid
       include Atomic
       include Relations::Eager
       include Queryable
+      extend Forwardable
+
+      def_delegators :@klass,
+                     :mongo_client,
+                     :database_field_name,
+                     :database_name
 
       # Options constant.
       #
@@ -308,15 +314,15 @@ module Mongoid
       # @param [ Criteria ] criteria The criteria.
       #
       # @since 3.0.0
-      def initialize(criteria)
+      def initialize(criteria, options = {})
         @criteria, @klass, @cache = criteria, criteria.klass, criteria.options[:cache]
-        @collection = @klass.with(criteria.persistence_options || {}).collection
+        #@klass.with(criteria.persistence_options || {}).collection
+        context = options[:mongo_context] || Context.new(self)
+        @collection = context.collection(criteria)
         criteria.send(:merge_type_selection)
         @view = collection.find(criteria.selector)
         apply_options
       end
-
-      delegate(:database_field_name, to: :@klass)
 
       # Get the last document in the database for the criteria's selector.
       #
