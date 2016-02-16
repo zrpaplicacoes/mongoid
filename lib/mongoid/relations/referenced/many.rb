@@ -162,7 +162,10 @@ module Mongoid
         # @since 2.1.0
         def each
           if block_given?
-            target.each { |doc| yield(doc) }
+            target.each do |doc|
+              doc.set_relation(__metadata.inverse_of, base)
+              yield(doc)
+            end
           else
             to_enum
           end
